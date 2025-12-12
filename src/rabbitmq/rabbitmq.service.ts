@@ -4,8 +4,8 @@ import * as amqp from "amqplib";
 
 @Injectable()
 export class RabbitmqService {
-  private connection: amqp.Connection;
-  private channel: amqp.Channel;
+  private connection: any;
+  private channel: any;
 
   constructor(private configService: ConfigService) {
     this.connect();
@@ -13,10 +13,10 @@ export class RabbitmqService {
 
   async connect() {
     try {
-      this.connection = (await amqp.connect(
+      this.connection = await amqp.connect(
         this.configService.get("RABBITMQ_URL")
-      )) as amqp.Connection;
-      this.channel = (await this.connection.createChannel()) as amqp.Channel;
+      );
+      this.channel = await this.connection.createChannel();
       console.log("Connected to RabbitMQ");
     } catch (error) {
       console.error("Failed to connect to RabbitMQ:", error);
