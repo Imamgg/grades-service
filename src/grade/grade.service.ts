@@ -3,7 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Grade } from "./entities/grade.entity";
 import { CreateGradeDto, UpdateGradeDto } from "./dto/grade.dto";
-import { RabbitmqService } from "./rabbitmq/rabbitmq.service";
+import { RabbitmqService } from "../rabbitmq/rabbitmq.service";
 
 @Injectable()
 export class GradeService {
