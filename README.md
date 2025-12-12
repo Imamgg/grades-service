@@ -3,6 +3,7 @@
 Service untuk manajemen nilai dan transkrip akademik dalam Sistem SIAKAD Terdistribusi.
 
 ## Fitur
+
 - ✅ Input & Update Nilai
 - ✅ Kalkulasi Nilai Akhir Otomatis
 - ✅ Konversi ke Huruf & Grade Point
@@ -12,10 +13,12 @@ Service untuk manajemen nilai dan transkrip akademik dalam Sistem SIAKAD Terdist
 - ✅ Background Job untuk Report
 
 ## Konfigurasi
+
 Port: **3003**  
-IP VM: **192.168.192.14**
+IP VM: **192.168.10.14**
 
 ## Environment Variables
+
 ```env
 PORT=3003
 DB_HOST=192.168.10.16
@@ -23,15 +26,17 @@ DB_PORT=3306
 DB_USERNAME=siakad_app
 DB_PASSWORD=admin
 DB_DATABASE=siakad
-RABBITMQ_URL=amqp://192.168.192.15:5672
+RABBITMQ_URL=amqp://192.168.10.15:5672
 ```
 
 ## Install Dependencies
+
 ```bash
 npm install
 ```
 
 ## Run
+
 ```bash
 # Development
 npm run start:dev
@@ -44,6 +49,7 @@ npm run start:prod
 ## API Endpoints
 
 ### Grade Management
+
 - `POST /api/grades` - Input nilai baru
 - `GET /api/grades` - Ambil semua nilai
 - `GET /api/grades?studentNim=2024001` - Filter by mahasiswa
@@ -54,14 +60,16 @@ npm run start:prod
 - `POST /api/grades/:id/finalize` - Finalisasi nilai (trigger notifikasi)
 
 ### Academic Records
+
 - `GET /api/grades/student/:nim/gpa` - Hitung GPA
 - `GET /api/grades/student/:nim/gpa?semester=1&academicYear=2024` - GPA semester tertentu
 - `GET /api/grades/student/:nim/transcript` - Generate transkrip lengkap
 
 ## Request Examples
+
 ```bash
 # Input nilai
-curl -X POST http://192.168.192.14:3003/api/grades \
+curl -X POST http://192.168.10.14:3003/api/grades \
   -H "Content-Type: application/json" \
   -d '{
     "studentNim":"2024001",
@@ -76,21 +84,22 @@ curl -X POST http://192.168.192.14:3003/api/grades \
   }'
 
 # Finalisasi nilai (kirim notifikasi)
-curl -X POST http://192.168.192.14:3003/api/grades/1/finalize
+curl -X POST http://192.168.10.14:3003/api/grades/1/finalize
 
 # Hitung GPA
-curl -X GET http://192.168.192.14:3003/api/grades/student/2024001/gpa
+curl -X GET http://192.168.10.14:3003/api/grades/student/2024001/gpa
 
 # GPA semester 1 tahun 2024/2025
-curl -X GET http://192.168.192.14:3003/api/grades/student/2024001/gpa?semester=1&academicYear=2024/2025
+curl -X GET http://192.168.10.14:3003/api/grades/student/2024001/gpa?semester=1&academicYear=2024/2025
 
 # Generate transkrip
-curl -X GET http://192.168.192.14:3003/api/grades/student/2024001/transcript
+curl -X GET http://192.168.10.14:3003/api/grades/student/2024001/transcript
 ```
 
 ## Sistem Penilaian
 
 ### Bobot Komponen Nilai
+
 - Quiz: **15%**
 - Assignment: **15%**
 - Midterm: **30%**
@@ -100,8 +109,9 @@ curl -X GET http://192.168.192.14:3003/api/grades/student/2024001/transcript
 `Nilai Akhir = (Quiz × 0.15) + (Assignment × 0.15) + (Midterm × 0.3) + (Final × 0.4)`
 
 ### Konversi Nilai Huruf
+
 | Nilai Akhir | Huruf | Grade Point |
-|-------------|-------|-------------|
+| ----------- | ----- | ----------- |
 | 85 - 100    | A     | 4.0         |
 | 75 - 84     | B     | 3.0         |
 | 65 - 74     | C     | 2.0         |
@@ -109,6 +119,7 @@ curl -X GET http://192.168.192.14:3003/api/grades/student/2024001/transcript
 | 0 - 54      | E     | 0.0         |
 
 ### Perhitungan GPA
+
 ```
 GPA = Σ(Grade Point) / Total Mata Kuliah
 ```
@@ -116,7 +127,9 @@ GPA = Σ(Grade Point) / Total Mata Kuliah
 ## RabbitMQ Integration
 
 ### Queue: `grade_notifications`
+
 Dikirim saat nilai difinalisasi.
+
 ```json
 {
   "studentNim": "2024001",
@@ -127,7 +140,9 @@ Dikirim saat nilai difinalisasi.
 ```
 
 ### Queue: `report_generation`
+
 Dikirim saat generate transkrip.
+
 ```json
 {
   "type": "transcript",
@@ -137,6 +152,7 @@ Dikirim saat generate transkrip.
 ```
 
 ## Database Schema
+
 ```sql
 CREATE TABLE grades (
   id INT PRIMARY KEY AUTO_INCREMENT,
@@ -160,8 +176,9 @@ CREATE TABLE grades (
 ```
 
 ## Deployment ke VM
+
 1. Copy folder `grades-service` ke VM4
-2. Pastikan RabbitMQ sudah running di VM5 (192.168.192.15)
+2. Pastikan RabbitMQ sudah running di VM5 (192.168.10.15)
 3. Konfigurasi `.env`
 4. Jalankan `npm install`
 5. Jalankan `npm run start:prod`

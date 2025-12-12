@@ -1,24 +1,24 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Grade } from './entities/grade.entity';
-import { CreateGradeDto, UpdateGradeDto } from './dto/grade.dto';
-import { RabbitmqService } from '../rabbitmq/rabbitmq.service';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Grade } from "./entities/grade.entity";
+import { CreateGradeDto, UpdateGradeDto } from "./dto/grade.dto";
+import { RabbitmqService } from "./rabbitmq/rabbitmq.service";
 
 @Injectable()
 export class GradeService {
   constructor(
     @InjectRepository(Grade)
     private gradeRepository: Repository<Grade>,
-    private rabbitmqService: RabbitmqService,
+    private rabbitmqService: RabbitmqService
   ) {}
 
   private calculateLetterGrade(score: number): string {
-    if (score >= 85) return 'A';
-    if (score >= 75) return 'B';
-    if (score >= 65) return 'C';
-    if (score >= 55) return 'D';
-    return 'E';
+    if (score >= 85) return "A";
+    if (score >= 75) return "B";
+    if (score >= 65) return "C";
+    if (score >= 55) return "D";
+    return "E";
   }
 
   private calculateGradePoint(letterGrade: string): number {
@@ -39,7 +39,8 @@ export class GradeService {
     const final = grade.final || 0;
 
     // Weighted calculation: Quiz 15%, Assignment 15%, Midterm 30%, Final 40%
-    grade.finalScore = quiz * 0.15 + assignment * 0.15 + midterm * 0.3 + final * 0.4;
+    grade.finalScore =
+      quiz * 0.15 + assignment * 0.15 + midterm * 0.3 + final * 0.4;
     grade.letterGrade = this.calculateLetterGrade(grade.finalScore);
     grade.gradePoint = this.calculateGradePoint(grade.letterGrade);
   }
@@ -84,7 +85,7 @@ export class GradeService {
 
   async finalizeGrade(id: number): Promise<Grade> {
     const grade = await this.findOne(id);
-    grade.status = 'finalized';
+    grade.status = "finalized";
     const result = await this.gradeRepository.save(grade);
 
     // Send notification via RabbitMQ
@@ -98,17 +99,21 @@ export class GradeService {
     return result;
   }
 
-  async calculateGPA(studentNim: string, semester?: number, academicYear?: string): Promise<any> {
+  async calculateGPA(
+    studentNim: string,
+    semester?: number,
+    academicYear?: string
+  ): Promise<any> {
     const query = this.gradeRepository
-      .createQueryBuilder('grade')
-      .where('grade.studentNim = :studentNim', { studentNim })
-      .andWhere('grade.status = :status', { status: 'finalized' });
+      .createQueryBuilder("grade")
+      .where("grade.studentNim = :studentNim", { studentNim })
+      .andWhere("grade.status = :status", { status: "finalized" });
 
     if (semester) {
-      query.andWhere('grade.semester = :semester', { semester });
+      query.andWhere("grade.semester = :semester", { semester });
     }
     if (academicYear) {
-      query.andWhere('grade.academicYear = :academicYear', { academicYear });
+      query.andWhere("grade.academicYear = :academicYear", { academicYear });
     }
 
     const grades = await query.getMany();
@@ -117,7 +122,10 @@ export class GradeService {
       return { gpa: 0, totalCredits: 0, grades: [] };
     }
 
-    const totalGradePoints = grades.reduce((sum, grade) => sum + (grade.gradePoint || 0), 0);
+    const totalGradePoints = grades.reduce(
+      (sum, grade) => sum + (grade.gradePoint || 0),
+      0
+    );
     const gpa = totalGradePoints / grades.length;
 
     return {
@@ -134,13 +142,13 @@ export class GradeService {
 
   async generateTranscript(studentNim: string): Promise<any> {
     const grades = await this.gradeRepository.find({
-      where: { studentNim, status: 'finalized' },
-      order: { academicYear: 'ASC', semester: 'ASC' },
+      where: { studentNim, status: "finalized" },
+      order: { academicYear: "ASC", semester: "ASC" },
     });
 
     // Queue report generation job
     await this.rabbitmqService.publishReportGeneration({
-      type: 'transcript',
+      type: "transcript",
       studentNim,
       timestamp: new Date(),
     });
